@@ -648,10 +648,21 @@ def create_dashboard(wb, results):
     # Projection notes
     ws.merge_cells("A61:H61")
 
-    ws["A61"] = (
-        "Annual projection is based on average search "
-        "costs from completed reporting weeks."
-    )
+    # ws["A61"] = (
+    #     "Annual projection is based on average search "
+    #     "costs from completed reporting weeks."
+    # )
+
+    if results.get("projection_basis") == "provisional":
+        ws["A61"] = (
+            "Illustrative annual projection based on the "
+            "current week's recorded search costs (x 52)."
+        )
+    else:
+        ws["A61"] = (
+            "Annual projection is based on average search "
+            "costs from completed reporting weeks."
+        )
 
     ws["A61"].font = Font(
         name="Aptos",
@@ -660,7 +671,7 @@ def create_dashboard(wb, results):
         color=GRAY
     )
 
-    if results["completed_weeks"] == 0:
+    if results["completed_weeks"] == "no_data":
         ws.merge_cells("A62:H62")
 
         ws["A62"] = (

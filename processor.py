@@ -127,8 +127,13 @@ def calculate_analytics(records, now=None):
     # ANNUALIZED PROJECTION
     # --------------------------------------------------
 
-    # Use completed weeks to avoid projecting from
-    # a partially completed reporting week.
+    # --------------------------------------------------
+    # ANNUALIZED PROJECTION
+    # --------------------------------------------------
+
+    # Use completed reporting weeks when available.
+    # Otherwise, use the current week as a provisional
+    # baseline so initial reports can show a projection.
 
     completed_records = []
 
@@ -152,12 +157,18 @@ def calculate_analytics(records, now=None):
         )
 
         first_week_start = (
-            first_timestamp - timedelta(days=first_timestamp.weekday())
-        ).replace(hour=0, minute=0, second=0, microsecond=0)
+            first_timestamp
+            - timedelta(days=first_timestamp.weekday())
+        ).replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
 
         completed_weeks = max(
             1,
-            (week_start.date() - first_week_start.date()).days // 7
+            (week_start.date() - first_week_start.date()).days // 7,
         )
 
         completed_total = sum(
@@ -165,12 +176,21 @@ def calculate_analytics(records, now=None):
         )
 
         average_weekly_cost = completed_total / completed_weeks
-        annualized_projection = round(average_weekly_cost * 52, 2)
+        projection_basis = "completed_weeks"
+
+    elif weekly_searches > 0:
+        completed_weeks = 0
+        average_weekly_cost = weekly_total
+        projection_basis = "provisional"
 
     else:
         completed_weeks = 0
         average_weekly_cost = 0.0
-        annualized_projection = 0.0
+        projection_basis = "no_data"
+
+    annualized_projection = round(
+        average_weekly_cost * 52, 2
+    )
 
     # --------------------------------------------------
     # MONTHLY ANNUAL PROJECTION
@@ -206,5 +226,6 @@ def calculate_analytics(records, now=None):
         "completed_weeks": completed_weeks,
         "average_weekly_cost": round(average_weekly_cost, 2),
         "annualized_projection": annualized_projection,
-        "monthly_projection": monthly_projection
+        "monthly_projection": monthly_projection,
+        "projection_basis": projection_basis,
     }
